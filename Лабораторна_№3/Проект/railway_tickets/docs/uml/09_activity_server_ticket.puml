@@ -1,0 +1,34 @@
+@startuml
+title Діаграма активності сервера: buyticket / bookticket
+start
+:Перевірити токен сесії;
+if (Сесія активна?) then (так)
+  :Знайти рейс за tripId;
+  if (Рейс існує і ще не відправився?) then (так)
+    if (Номер місця в межах вагона?) then (так)
+      if (Місце вільне?) then (так)
+        if (Команда buyticket?) then (так)
+          :Статус «Оплачено», PaidAt = зараз;
+        else (ні)
+          :Статус «Заброньовано», ReservedUntil = +24 год;
+        endif
+        :INSERT INTO Tickets, commit;
+        :Відповідь OK з даними квитка;
+      else (ні)
+        :CONFLICT: місце зайняте;
+        stop
+      endif
+    else (ні)
+      :VALIDATION: місце поза межами;
+      stop
+    endif
+  else (ні)
+    :NOT_FOUND / VALIDATION;
+    stop
+  endif
+else (ні)
+  :UNAUTHORIZED;
+  stop
+endif
+stop
+@enduml
