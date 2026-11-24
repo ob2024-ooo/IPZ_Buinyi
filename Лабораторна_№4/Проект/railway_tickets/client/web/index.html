@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<title>Залізничні квитки — бронювання та купівля</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="desktop"></div>
+
+<!-- ===================== Вікно входу ===================== -->
+<template id="tpl-login">
+  <div class="window window-small">
+    <div class="titlebar"><span class="app-icon">🚆</span><span>Вхід — Залізничні квитки</span></div>
+    <div class="window-body">
+      <h1 class="form-title">Вхід у систему</h1>
+      <p class="form-subtitle">Бронювання та купівля залізничних квитків</p>
+      <label class="field-label" for="login-login">Логін</label>
+      <input id="login-login" class="text-input" data-bind="login" autocomplete="username" placeholder="наприклад, ivan_koval">
+      <label class="field-label" for="login-password">Пароль</label>
+      <input id="login-password" class="text-input" type="password" data-bind="password" autocomplete="current-password">
+      <div class="error-text" data-text="error" data-show="error"></div>
+      <button class="btn btn-primary btn-wide" data-action="submit" data-enabled="notBusy">Увійти</button>
+      <p class="link-row">Не маєте акаунту? <a href="#" data-action="goRegister">Зареєструйтеся</a></p>
+    </div>
+    <div class="statusbar" data-text="status"></div>
+  </div>
+</template>
+
+<!-- ===================== Вікно реєстрації ===================== -->
+<template id="tpl-register">
+  <div class="window window-small">
+    <div class="titlebar"><span class="app-icon">🚆</span><span>Реєстрація — Залізничні квитки</span></div>
+    <div class="window-body">
+      <h1 class="form-title">Реєстрація</h1>
+      <p class="form-subtitle">Створіть обліковий запис пасажира</p>
+      <label class="field-label" for="reg-name">Ім'я та прізвище</label>
+      <input id="reg-name" class="text-input" data-bind="fullName" placeholder="необов'язково">
+      <label class="field-label" for="reg-login">Логін</label>
+      <input id="reg-login" class="text-input" data-bind="login" placeholder="5–20 символів, латиниця">
+      <label class="field-label" for="reg-password">Пароль</label>
+      <input id="reg-password" class="text-input" type="password" data-bind="password" placeholder="мін. 8 символів, літера і цифра">
+      <label class="field-label" for="reg-confirm">Підтвердження паролю</label>
+      <input id="reg-confirm" class="text-input" type="password" data-bind="confirmPassword">
+      <div class="error-text" data-text="error" data-show="error"></div>
+      <button class="btn btn-primary btn-wide" data-action="submit" data-enabled="notBusy">Зареєструватися</button>
+      <p class="link-row">Вже маєте акаунт? <a href="#" data-action="goLogin">Увійти</a></p>
+    </div>
+    <div class="statusbar" data-text="status"></div>
+  </div>
+</template>
+
+<!-- ===================== Головне вікно: пошук рейсів ===================== -->
+<template id="tpl-main">
+  <div class="window window-main">
+    <div class="titlebar"><span class="app-icon">🚆</span><span>Пошук рейсів — Залізничні квитки</span></div>
+    <div class="toolbar">
+      <span class="user-chip">Пасажир: <b data-text="userName"></b></span>
+      <span class="spacer"></span>
+      <button class="btn btn-secondary" data-action="openTickets">🎫 Мої квитки</button>
+      <button class="btn btn-secondary" data-action="openRating">⭐ Рейтинг поїздів</button>
+      <button class="btn btn-danger" data-action="logout">Вийти</button>
+    </div>
+    <div class="window-body">
+      <div class="search-panel">
+        <div class="radio-group">
+          <label><input type="radio" name="mode" value="name" data-bind="mode"> За назвою / містом</label>
+          <label><input type="radio" name="mode" value="date" data-bind="mode"> За датою відправлення</label>
+        </div>
+        <input class="text-input search-input" data-bind="query" data-show="isNameMode" placeholder="Наприклад: Київ або Львів — Київ">
+        <input id="search-date" class="text-input search-input" data-bind="dateQuery" data-show="isDateMode" placeholder="ДД.ММ.РРРР або РРРР-ММ-ДД">
+        <button class="btn btn-primary" data-action="search" data-enabled="notBusy">Знайти</button>
+      </div>
+      <div class="table-wrap">
+        <table class="grid">
+          <thead><tr>
+            <th>№</th><th>Рейс</th><th>Відправлення</th><th>Прибуття</th><th>Поїзд</th>
+            <th class="num">Вільних місць</th><th class="num">Ціна, грн</th><th>Рейтинг</th>
+          </tr></thead>
+          <tbody data-list="trips"></tbody>
+        </table>
+        <div class="empty-text" data-show="isEmpty" data-text="emptyText"></div>
+      </div>
+      <div class="button-row">
+        <span class="hint">Подвійний клік по рейсу або кнопка праворуч — вибір місця</span>
+        <span class="spacer"></span>
+        <button class="btn btn-primary" data-action="openSeats" data-enabled="hasSelection">Обрати місце…</button>
+      </div>
+    </div>
+    <div class="statusbar" data-text="status"></div>
+  </div>
+</template>
+
+<!-- ===================== Діалог: вибір місця ===================== -->
+<template id="tpl-seats">
+  <div class="window window-dialog">
+    <div class="titlebar"><span class="app-icon">💺</span><span>Купівля / бронювання квитка</span><button class="close-x" data-action="close">✕</button></div>
+    <div class="window-body">
+      <div class="trip-card">
+        <div class="trip-route" data-text="routeText"></div>
+        <div class="trip-meta" data-text="metaText"></div>
+      </div>
+      <div class="legend">
+        <span><i class="seat-demo free"></i>вільне</span>
+        <span><i class="seat-demo taken"></i>зайняте</span>
+        <span><i class="seat-demo selected"></i>обране</span>
+      </div>
+      <div class="carriage"><div class="seat-grid" data-seats="seats"></div></div>
+      <div class="order-summary">
+        <span>Обране місце: <b data-text="seatText"></b></span>
+        <span>До сплати: <b data-text="priceText"></b></span>
+      </div>
+      <div class="error-text" data-text="error" data-show="error"></div>
+      <div class="button-row">
+        <span class="hint">Бронь діє до 24 год (але не пізніше ніж за 30 хв до відправлення)</span>
+        <span class="spacer"></span>
+        <button class="btn btn-secondary" data-action="book" data-enabled="canOrder">Забронювати</button>
+        <button class="btn btn-primary" data-action="buy" data-enabled="canOrder">Купити квиток</button>
+        <button class="btn btn-ghost" data-action="close">Закрити</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ===================== Діалог: мої квитки ===================== -->
+<template id="tpl-tickets">
+  <div class="window window-dialog window-wide">
+    <div class="titlebar"><span class="app-icon">🎫</span><span>Мої квитки</span><button class="close-x" data-action="close">✕</button></div>
+    <div class="window-body">
+      <div class="table-wrap">
+        <table class="grid">
+          <thead><tr>
+            <th>№</th><th>Рейс</th><th>Відправлення</th><th class="num">Місце</th>
+            <th class="num">Ціна</th><th>Статус</th><th>Моя оцінка</th>
+          </tr></thead>
+          <tbody data-list="tickets"></tbody>
+        </table>
+        <div class="empty-text" data-show="isEmpty">У вас ще немає квитків.</div>
+      </div>
+      <div class="button-row">
+        <span class="hint" data-text="selectedText"></span>
+        <span class="spacer"></span>
+        <button class="btn btn-primary" data-action="pay" data-enabled="canPay">Оплатити бронь</button>
+        <button class="btn btn-danger" data-action="cancel" data-enabled="canCancel">Скасувати квиток</button>
+        <button class="btn btn-secondary" data-action="rate" data-enabled="canRate">Оцінити рейс…</button>
+        <button class="btn btn-ghost" data-action="close">Закрити</button>
+      </div>
+    </div>
+    <div class="statusbar" data-text="status"></div>
+  </div>
+</template>
+
+<!-- ===================== Діалог: оцінка рейсу ===================== -->
+<template id="tpl-rate">
+  <div class="window window-small">
+    <div class="titlebar"><span class="app-icon">⭐</span><span>Оцінка рейсу</span><button class="close-x" data-action="close">✕</button></div>
+    <div class="window-body">
+      <div class="trip-route" data-text="tripName"></div>
+      <p class="form-subtitle">Наскільки вам сподобалась поїздка?</p>
+      <div class="stars" data-stars="stars"></div>
+      <label class="field-label" for="rate-comment">Коментар</label>
+      <textarea id="rate-comment" class="text-input" rows="3" data-bind="comment" placeholder="необов'язково"></textarea>
+      <div class="error-text" data-text="error" data-show="error"></div>
+      <div class="button-row">
+        <span class="spacer"></span>
+        <button class="btn btn-primary" data-action="submit">Надіслати оцінку</button>
+        <button class="btn btn-ghost" data-action="close">Скасувати</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ===================== Діалог: рейтинг поїздів ===================== -->
+<template id="tpl-rating">
+  <div class="window window-dialog">
+    <div class="titlebar"><span class="app-icon">🏆</span><span>Рейтинг поїздів</span><button class="close-x" data-action="close">✕</button></div>
+    <div class="window-body">
+      <p class="form-subtitle">Середня оцінка всіх рейсів поїзда (за рівності — більше оцінок вище)</p>
+      <div class="table-wrap">
+        <table class="grid">
+          <thead><tr><th class="num">Місце</th><th>Поїзд</th><th>Номер</th><th>Оцінка</th><th class="num">К-сть оцінок</th></tr></thead>
+          <tbody data-list="trains"></tbody>
+        </table>
+      </div>
+      <div class="button-row">
+        <span class="spacer"></span>
+        <button class="btn btn-secondary" data-action="toggleSort" data-text="sortText"></button>
+        <button class="btn btn-ghost" data-action="close">Закрити</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ===================== Повідомлення ===================== -->
+<template id="tpl-message">
+  <div class="window window-message">
+    <div class="titlebar"><span class="app-icon" data-text="icon"></span><span data-text="title"></span></div>
+    <div class="window-body">
+      <div class="message-body"><span class="message-icon" data-text="icon"></span><span data-text="text"></span></div>
+      <div class="button-row">
+        <span class="spacer"></span>
+        <button class="btn btn-primary" data-action="yes" data-text="yesText"></button>
+        <button class="btn btn-ghost" data-action="no" data-show="isConfirm">Ні</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script src="app.js"></script>
+</body>
+</html>

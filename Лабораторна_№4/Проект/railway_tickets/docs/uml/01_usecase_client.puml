@@ -1,0 +1,37 @@
+@startuml
+left to right direction
+title Діаграма варіантів використання клієнтської частини
+actor "Гість" as guest
+actor "Пасажир" as pass
+rectangle "Клієнт системи продажу залізничних квитків" {
+  usecase "Зареєструватися" as uc_reg
+  usecase "Увійти в систему" as uc_login
+  usecase "Шукати рейси" as uc_search
+  usecase "Пошук за назвою / містом" as uc_name
+  usecase "Пошук за датою відправлення" as uc_date
+  usecase "Переглянути схему вагона та обрати місце" as uc_seats
+  usecase "Купити квиток" as uc_buy
+  usecase "Забронювати місце" as uc_book
+  usecase "Переглянути «Мої квитки»" as uc_my
+  usecase "Оплатити бронь" as uc_pay
+  usecase "Скасувати квиток" as uc_cancel
+  usecase "Оцінити рейс" as uc_rate
+  usecase "Переглянути рейтинг поїздів" as uc_rating
+  usecase "Вийти з системи" as uc_logout
+}
+guest -- uc_reg
+guest -- uc_login
+pass -- uc_search
+pass -- uc_buy
+pass -- uc_book
+pass -- uc_my
+pass -- uc_rating
+pass -- uc_logout
+uc_name .> uc_search : <<extend>>
+uc_date .> uc_search : <<extend>>
+uc_buy .> uc_seats : <<include>>
+uc_book .> uc_seats : <<include>>
+uc_pay .> uc_my : <<extend>>
+uc_cancel .> uc_my : <<extend>>
+uc_rate .> uc_my : <<extend>>
+@enduml

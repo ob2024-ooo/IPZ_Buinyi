@@ -1,0 +1,9 @@
+{
+  "host": "127.0.0.1",
+  "port": 5055,
+  "database": "railway.db",
+  "session_hours": 12,
+  "booking_hours": 24,
+  "max_request_bytes": 65536,
+  "socket_timeout_sec": 10
+}
