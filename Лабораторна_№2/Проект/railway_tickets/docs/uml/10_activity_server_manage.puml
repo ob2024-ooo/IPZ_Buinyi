@@ -1,0 +1,31 @@
+@startuml
+title Діаграма активності сервера: payticket, cancelticket, ratetrip
+start
+:Перевірити токен сесії, знайти квиток / рейс користувача;
+if (Квиток / рейс знайдено?) then (так)
+  if (Яка команда?) then (payticket)
+    if (Бронь активна?) then (так)
+      :UPDATE Tickets: «Оплачено»;
+    else (ні)
+      :CONFLICT / VALIDATION;
+      stop
+    endif
+  else (інша)
+    if (cancelticket і рейс не відправився?) then (так)
+      :UPDATE Tickets: «Скасовано»;
+    else (ні)
+      if (ratetrip: є оплачений квиток, рейс відбувся, ще не оцінено, 1–5?) then (так)
+        :INSERT INTO Ratings, обчислити середню оцінку;
+      else (ні)
+        :VALIDATION / CONFLICT;
+        stop
+      endif
+    endif
+  endif
+  :Commit і відповідь OK;
+else (ні)
+  :NOT_FOUND;
+  stop
+endif
+stop
+@enduml

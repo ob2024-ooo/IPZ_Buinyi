@@ -1,0 +1,34 @@
+@startuml
+title Діаграма активності сервера: register та login
+start
+:Отримати команду з полями login, password;
+if (Команда register?) then (так)
+  if (Логін і пароль відповідають правилам?) then (так)
+    if (Логін уже існує?) then (так)
+      :CONFLICT: логін зайнятий;
+      stop
+    else (ні)
+      :Згенерувати сіль і PBKDF2-хеш пароля;
+      :INSERT INTO Users;
+      :Відповідь OK з userId;
+    endif
+  else (ні)
+    :VALIDATION: опис помилки;
+    stop
+  endif
+else (ні (login))
+  if (Користувача знайдено?) then (так)
+    if (Хеш пароля збігається?) then (так)
+      :Згенерувати токен, INSERT INTO Sessions;
+      :Відповідь OK з токеном;
+    else (ні)
+      :WRONG_PASSWORD;
+      stop
+    endif
+  else (ні)
+    :USER_NOT_FOUND;
+    stop
+  endif
+endif
+stop
+@enduml
