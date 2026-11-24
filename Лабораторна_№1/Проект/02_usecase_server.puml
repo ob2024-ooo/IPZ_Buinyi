@@ -1,0 +1,41 @@
+@startuml
+left to right direction
+title Діаграма варіантів використання серверної частини
+actor "Клієнтська\nпрограма" as client
+actor "База даних\nSQLite" as db
+rectangle "TCP-сервер продажу залізничних квитків" {
+  usecase "Зареєструвати користувача" as s_reg
+  usecase "Автентифікувати та створити сесію" as s_auth
+  usecase "Закрити сесію (logout)" as s_logout
+  usecase "Видати список рейсів" as s_trips
+  usecase "Створити квиток (купівля / бронювання)" as s_ticket
+  usecase "Оплатити бронь" as s_pay
+  usecase "Скасувати квиток" as s_cancel
+  usecase "Зберегти оцінку рейсу" as s_rate
+  usecase "Сформувати рейтинг поїздів" as s_rating
+  usecase "Перевірити сесію (токен)" as s_sess
+  usecase "Записати запит у журнал RequestLog" as s_log
+}
+client -- s_reg
+client -- s_auth
+client -- s_logout
+client -- s_trips
+client -- s_ticket
+client -- s_pay
+client -- s_cancel
+client -- s_rate
+client -- s_rating
+s_sess -- db
+s_log -- db
+s_reg -- db
+s_auth -- db
+s_logout .> s_sess : <<include>>
+s_trips .> s_sess : <<include>>
+s_ticket .> s_sess : <<include>>
+s_pay .> s_sess : <<include>>
+s_cancel .> s_sess : <<include>>
+s_rate .> s_sess : <<include>>
+s_rating .> s_sess : <<include>>
+s_reg .> s_log : <<include>>
+s_auth .> s_log : <<include>>
+@enduml
